@@ -3,9 +3,96 @@
 require "./config/database.php";
 
 $user_id = 1;
+$current_category_name = '';
+$current_category_id = '';
+//$_GET;
+//$_POST;
+//$_REQUEST;
+//
+//
+//
+echo "<pre>";
+
+var_dump($_POST);
+var_dump($_REQUEST);
+echo "</pre>";
+//die();
 
 try {
     $connection = mysqli_connect($host,$user,$password,$db_name,$port);
+
+
+    if(isset($_POST)){
+
+
+
+
+         if(isset($_POST['category_name']) && isset($_POST['cat_id'])){
+
+
+             $categry_name = trim($_POST['category_name']);
+             $category_id = intval($_POST['cat_id']);
+
+             $sql_update_category = "UPDATE categories  SET name ='{$categry_name}' WHERE id = {$category_id} ;";
+             //echo $sql_new_category;
+
+             $result = $connection->query($sql_update_category);
+
+
+         } else if(isset($_POST['category_name'])){
+
+             $categry_name = trim($_POST['category_name']);
+             $sql_new_category = "INSERT INTO categories (name, user_id) value ('".$categry_name."', ".$user_id.");";
+             //echo $sql_new_category;
+
+             $result = $connection->query($sql_new_category);
+             //$result->close();
+
+
+         }
+    }
+
+
+    if(isset($_GET)) {
+
+
+        if(isset($_GET['action'])){
+
+            switch ($_GET['action']) {
+
+                case 'delete':
+
+                        echo "Ovo treba da obrise kategoriju";
+                        $sql_category_delete  = "DELETE FROM categories WHERE id = {$_GET['id']};";
+
+                        //echo $sql_category_delete;
+                        $result = $connection->query($sql_category_delete);
+
+                        //var_dump($result);
+
+                    break;
+
+                case 'edit':
+
+                    $current_category_select = "SELECT name FROM categories WHERE  id = {$_GET['id']};";
+
+                    $result = $connection->query($current_category_select);
+                    $row = $result->fetch_assoc();
+
+                    $current_category_name = $row['name'];
+                    $current_category_id = $_GET['id'];
+                    //echo "edit_cat";
+                    //echo $current_category_name;
+
+                    break;
+
+            }
+
+        }
+
+
+    }
+
 
     $sql_get_user_categories = "SELECT * FROM categories WHERE user_id = '{$user_id}'";
 
@@ -70,10 +157,13 @@ try {
 
         <div class="row">
             <h2>Categories</h2>
+            <form name="category" method="post" action="index.php">
             <div class="col-12">
-                <input id="category_input" name="category_name" type="text" placeholder="New category..." maxlength="27">
+                <input id="category_input" name="category_name" type="text" placeholder="New category..." maxlength="27" value="<?php echo $current_category_name; ?>">
+                <input type="hidden" name="cat_id" value="<?php echo $current_category_id; ?>"/>
                 <button id="enter">ADD</button>
             </div>
+            </form>
         </div>
 
         <div class="row">
@@ -82,7 +172,7 @@ try {
                     <?php
                         foreach($categories_data as $category) {
                             //var_dump($category);
-                            echo "<li>".$category['name']."</li>";
+                            echo "<li>".$category['name']."<span class='actions'><a href='index.php?action=edit&id={$category['id']}'>edit</a> | <a href='index.php?action=delete&id={$category['id']}'>delete</a></span></li>";
                         }
                     ?>
 
